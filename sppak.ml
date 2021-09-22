@@ -15,10 +15,11 @@ let rec get_files prefix dir =
     if Sys.is_directory dir then
         Sys.readdir dir
         |> Array.to_list
-        |> List.concat_map (fun name ->
+        |> List.map (fun name ->
             get_files 
                 (prefix ^ name ^ "/") 
                 (dir ^ "/" ^ name))
+        |> List.concat
     else [String.sub prefix 0 (String.length prefix - 1)]
 ;;
 
