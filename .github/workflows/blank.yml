@@ -34,5 +34,5 @@ jobs:
         run: opam install dune
         
       - name: Build
-        run: dune build ./sppak --release
+        run: ocamlfind dune build ./sppak --release
         
