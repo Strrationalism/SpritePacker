@@ -31,7 +31,6 @@ jobs:
         uses: ocaml/setup-ocaml@v1.1.11
         with:
           ocaml-version: 4.12.0
-          opam-depext: false
         
       - name: Setup Dune
         run: opam install dune
