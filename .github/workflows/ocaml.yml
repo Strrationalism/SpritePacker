@@ -36,10 +36,9 @@ jobs:
       - name: Build
         run: opam exec -- dune build ./sppak.exe --release
         
-      - name: Rename and Strip for Unix-like platform
+      - name: Rename for Unix-like platform
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
-        run: |
-          mv ./_build/default/sppak.exe ./_build/default/sppak
+        run: mv ./_build/default/sppak.exe ./_build/default/sppak
         
       - name: Update Build Artifact
         uses: actions/upload-artifact@v2.2.4
