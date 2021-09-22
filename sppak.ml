@@ -6,7 +6,7 @@ let help () =
     print_endline "by Strrationalism Studio 2021";
     print_endline "";
     print_endline "Usage:";
-    print_endline "    sppak <inputDir> <output> [--margin:<margin>]";
+    print_endline "    sppak <inputDir> <output> [--margin <margin>]";
     print_endline ""
 ;;
 
