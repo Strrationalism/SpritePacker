@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: OCaml
 
 # Controls when the workflow will run
 on:
@@ -34,5 +34,5 @@ jobs:
         run: opam install dune
         
       - name: Build
-        run: ocamlfind dune build ./sppak --release
+        run: dune build ./sppak --release
         
