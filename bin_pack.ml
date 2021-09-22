@@ -29,7 +29,8 @@ let rec except_one x =
 
 
 let sum_by by ls =
-    List.map by ls |> reduce_left (fun a b -> a + b) 
+    List.map by ls 
+    |> reduce_left (fun a b -> a + b) 
 ;;
 
 
@@ -114,8 +115,7 @@ let try_put_rect_into_space (rect: 'tag input_rectangle) (Space space) =
         let spaces = 
             [ space01; space02 ]
             |> List.filter (fun x -> x.w <> 0 && x.h <> 0)
-            |> List.map (fun x -> Space x)
-        in
+            |> List.map (fun x -> Space x) in
             
         Some (rect, spaces, tag, Space space)
 ;;
@@ -141,11 +141,12 @@ let rec pack prev_result =
                             let space =
                                 Space 
                                     { x = 0;
-                                    y = prev_result.height;
-                                    w = new_width;
-                                    h = current.h } in
+                                      y = prev_result.height;
+                                      w = new_width;
+                                      h = current.h } in
 
                             space :: prev_result.spaces }
+                            
                 else 
                     let new_height = max prev_result.height current.h in
                     { prev_result with 
@@ -155,13 +156,14 @@ let rec pack prev_result =
                             let space =
                                 Space 
                                     { x = prev_result.width;
-                                    y = 0;
-                                    w = current.w;
-                                    h = new_height } in
+                                      y = 0;
+                                      w = current.w;
+                                      h = new_height } in
 
                             space :: prev_result.spaces } in
 
             pack result (current :: tail)
+
         | put_results ->
             let rect, spaces, tag, org_space =
                 put_results

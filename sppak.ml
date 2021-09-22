@@ -23,6 +23,16 @@ let rec get_files prefix dir =
 ;;
 
 
+let get_image_files dir =
+    get_files "" dir
+    |> List.filter (fun file ->
+        let ext = 
+            Filename.extension file 
+            |> String.lowercase_ascii in
+        ext = ".png" || ext = ".bmp")
+;;
+
+
 let () =
     Sys.argv
     |> Array.to_list
@@ -31,12 +41,7 @@ let () =
             if Sys.is_directory input_dir |> not then
                 failwith "<inputDir> must be a dirctory.";
 
-            get_files "" input_dir
-            |> List.filter (fun file ->
-                let ext = 
-                    Filename.extension file 
-                    |> String.lowercase_ascii in
-                ext = ".png" || ext = ".bmp")
+            get_image_files input_dir
             |> List.iter (Printf.printf "%s\n");
             
         | _ -> help ()
