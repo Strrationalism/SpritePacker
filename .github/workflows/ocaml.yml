@@ -36,3 +36,11 @@ jobs:
       - name: Build
         run: opam exec -- dune build ./sppak --release
         
+      - name: Update Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: Sprite Packer for ${{ runner.os }} x64
+          path: |
+            _build/default/sppak.exe
+            _build/default/sppak
+          
