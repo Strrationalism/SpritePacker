@@ -39,8 +39,8 @@ jobs:
       - name: Rename and Strip for Unix-like platform
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         run: |
-          mv _build/default/sppak.exe _build/default/sppak
-          strip _build/default/sppak
+          mv ./_build/default/sppak.exe ./_build/default/sppak
+          strip ./_build/default/sppak
         
       - name: Update Build Artifact
         uses: actions/upload-artifact@v2.2.4
