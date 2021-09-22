@@ -31,9 +31,7 @@ jobs:
         uses: ocaml/setup-ocaml@v1.1.11
         
       - name: Setup Dune
-        run: |
-          opam install dune
-          eval $(opam env)
+        run: opam install dune
         
       - name: Build
         run: opam exec -- dune build ./sppak.exe --release
