@@ -57,6 +57,22 @@ type align_mode =
 ;;
 
 
+let align_to_4 x =
+    if x mod 4 <> 0 then (x / 4 + 1) * 4
+    else x
+;;
+
+
+let align align_mode result =
+    match align_mode with
+    | No_align -> result
+    | Align_to_4 -> 
+        { result with
+            width = align_to_4 result.width;
+            height = align_to_4 result.height }
+;;
+
+
 type options = 
     { margin: int;
       align_mode: align_mode }
@@ -172,6 +188,7 @@ let () =
                           h = height image + 2 * options.margin;
                           tag = name, image })
                     |> bin_pack
+                    |> align options.align_mode
                     |> write_bin_pack_result options out
             end
             
