@@ -34,6 +34,11 @@ jobs:
         
       - name: Setup Dune
         run: opam install dune
+
+      - name: Install Dependents
+        run: |
+          opam install stb_image
+          opam install stb_image_write
         
       - name: Build
         run: opam exec -- dune build ./sppak.exe --release
