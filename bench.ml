@@ -17,7 +17,7 @@ let test test_name test_case =
     let fill_rate = float_of_int filled_area /. float_of_int all_area in
     
     printf 
-        "rects:%3d\tfill-rate:%f%%\ttime:%fs\t in %s\n" 
+        "rects:%3d\tfill-rate:%f%%\ttime:%.3fs\t in %s\n" 
         (List.length rects)
         (fill_rate *. 100.0) 
         time_span
