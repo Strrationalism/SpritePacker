@@ -1,6 +1,7 @@
 open Bin_pack;;
-(*open Bigarray;;*)
-
+open Printf;;
+open Stb_image;;
+open Bigarray;;
 
 let help () =
     print_endline "Sprite Packer";
@@ -32,10 +33,17 @@ let get_image_files dir =
             |> String.lowercase_ascii in
         ext = ".png" || ext = ".bmp")
     |> List.map (fun name ->
-        let img_result = Stb_image.loadf ~channels:4 (dir ^ "/" ^ name) in
+        let img_result = Stb_image.load ~channels:4 (dir ^ "/" ^ name) in
         match img_result with
-        | Ok x -> name, x
-        | Error (`Msg x) -> failwith x)
+        | Error (`Msg x) -> failwith x
+        | Ok img -> 
+            if 
+                Array1.dim (data img) 
+                <> width img * height img * 4 
+            then
+                failwith "You must pass png in 4 channels.";
+
+            name, img)
 ;;
 
 
@@ -60,36 +68,73 @@ let rec parse_options prev_option =
 ;;
 
 
-let write_bin_pack_result options _ result =
-    (*let _ = 
+let write_bin_pack_result options out (result: _ Bin_pack.result) =
+    let pack = 
         Array1.create 
-            float32 
+            Int8_unsigned
             c_layout 
-            (result.width * result.height) in*)
+            (result.width * result.height * 4) in
 
-    let csv = ref "name, x, y, w, h\n" in
+    Array1.fill pack 0;
+
+    let output_csv = open_out (out ^ ".csv") in
+    fprintf output_csv "name, x, y, w, h\n";
 
     let sprites =
         result.rects
         |> List.map (fun (rect, tag) ->
             { x = rect.x + options.margin;
-            y = rect.y + options.margin;
-            w = rect.w - 2 * options.margin;
-            h = rect.h - 2 * options.margin; },
-            tag) in
+              y = rect.y + options.margin;
+              w = rect.w - 2 * options.margin;
+              h = rect.h - 2 * options.margin; },
+              tag) in
     
     sprites
-    |> List.iter (fun (rect, (name, _)) ->
-        csv := 
-            Printf.sprintf "%s\"%s\", %d, %d, %d, %d\n" 
-                (!csv) 
-                (Filename.chop_extension name)
-                rect.x 
-                rect.y 
-                rect.w 
-                rect.h);
+    |> List.iter (fun (rect, (name, image)) ->
+        if width image <> rect.w then
+            failwith "Width of image is not equals to rect.";
 
-    print_endline (!csv)
+        if height image <> rect.h then
+            failwith "Height of image is not equals to rect.";
+
+        let image_pixels = data image in
+
+        for src_y = 0 to rect.h - 1 do
+            for src_x = 0 to rect.w - 1 do
+                let dst_y = rect.y + src_y in
+                let dst_x = rect.x + src_x in
+                let dst_offset = 
+                    (dst_y * result.width + dst_x) * 4 in
+                
+                let src_offset = 
+                    (src_y * rect.w + src_x) * 4 in
+
+                for channel = 0 to 3 do
+                    Array1.get image_pixels (src_offset + channel)
+                    |> Array1.set pack (dst_offset + channel)
+                done
+            done
+        done;
+
+        fprintf 
+            output_csv
+            "\"%s\", %d, %d, %d, %d\n" 
+            (Filename.chop_extension name)
+            rect.x 
+            rect.y 
+            rect.w 
+            rect.h);
+
+    close_out output_csv;
+    
+    let save_function =
+        match Filename.extension out with
+        | ".png" -> Stb_image_write.png
+        | ".bmp" -> Stb_image_write.bmp
+        | ".tga" -> Stb_image_write.tga
+        | _ -> failwith "Unknown output type." in
+
+    save_function out ~w:result.width ~h:result.height ~c:4 pack
 ;;
 
 
@@ -100,14 +145,15 @@ let () =
         | _ :: input_dir :: out :: options ->
             if Sys.is_directory input_dir |> not then
                 failwith "<inputDir> must be a dirctory.";
+
             begin
                 match parse_options default_options options with
                 | Error () -> help ()
                 | Ok options ->
                     get_image_files input_dir
                     |> List.map (fun (name, image) ->
-                        { w = Stb_image.width image + 2 * options.margin;
-                          h = Stb_image.height image + 2 * options.margin;
+                        { w = width image + 2 * options.margin;
+                          h = height image + 2 * options.margin;
                           tag = name, image })
                     |> bin_pack
                     |> write_bin_pack_result options out
