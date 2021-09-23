@@ -52,6 +52,9 @@ jobs:
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         run: mv ./_build/default/sppak.exe ./_build/default/sppak
         
+      - name: Test Executable File
+        run: ./_build/default/sppak
+        
       - name: Update Build Artifact
         uses: actions/upload-artifact@v2.2.4
         with:
