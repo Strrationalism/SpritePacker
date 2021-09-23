@@ -47,6 +47,8 @@ jobs:
 
       - name: Install Dependents
         run: |
+          opam install ocamlfind
+          opam install result
           opam install stb_image
           opam install stb_image_write
         
