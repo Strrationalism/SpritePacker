@@ -21,16 +21,26 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix: 
-        os: [ windows-latest, ubuntu-latest, macos-11 ]
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v2
 
       - name: Setup OCaml
-        uses: tapthaker/actions-ocaml@0.4
+        uses: ocaml/setup-ocaml@v1.1.11
+        if: ${{ runner.os == "Windows" || runner.os == "Linux" }}
         with:
-          ocaml_version: 4.12.0
+          ocaml-version: 4.12.0
+          
+      - name: Setup OCaml on macOS
+        if: ${{ runner.os == "macOS" }}
+        run: |
+          brew install opam
+          opam init
+          eval `opam env`
+          opam switch create 4.12.0
+          eval `opam env`
         
       - name: Setup Dune
         run: opam install dune
