@@ -8,6 +8,9 @@
 *.cmxs
 *.cmxa
 
+out.png
+out.png.csv
+
 # ocamlbuild working directory
 _build/
 

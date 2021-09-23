@@ -63,7 +63,7 @@ let align_to_4 x =
 ;;
 
 
-let align align_mode result =
+let align align_mode (result: _ Bin_pack.result) =
     match align_mode with
     | No_align -> result
     | Align_to_4 -> 
