@@ -11,8 +11,9 @@ let help () =
     print_endline "    sppak <inputDir> <output> [OPTIONS]";
     print_endline "";
     print_endline "Options:";
-    print_endline "    --align-to-4       Align packed image to 4*N pixels.";
-    print_endline "    --margin <margin>  Set margin in pixels for every sprite.";
+    print_endline "    --align-to-4           Align packed image to 4 * N pixels.";
+    print_endline "    --margin <margin>      Set margin in pixels in each sprite.";
+    print_endline "    --channels <channels>  Set number (1 ~ 4) of channels in each sprite.";
     print_endline ""
 ;;
 
@@ -29,7 +30,7 @@ let rec get_files prefix dir =
 ;;
 
 
-let get_image_files dir =
+let get_image_files channels dir =
     get_files "" dir
     |> List.filter (fun file ->
         let ext = 
@@ -37,15 +38,20 @@ let get_image_files dir =
             |> String.lowercase_ascii in
         ext = ".png" || ext = ".bmp")
     |> List.map (fun name ->
-        let img_result = Stb_image.load ~channels:4 (dir ^ "/" ^ name) in
+        let img_result = 
+            Stb_image.load 
+                ~channels:channels 
+                (dir ^ "/" ^ name) in
+
         match img_result with
         | Error (`Msg x) -> failwith x
         | Ok img -> 
             if 
                 Array1.dim (data img) 
-                <> width img * height img * 4 
+                <> width img * height img * channels
             then
-                failwith "You must pass png in 4 channels.";
+                "You must pass images in " ^ Int.to_string channels ^ " channels."
+                |> failwith;
 
             name, img)
 ;;
@@ -75,13 +81,15 @@ let align align_mode (result: _ Bin_pack.result) =
 
 type options = 
     { margin: int;
-      align_mode: align_mode }
+      align_mode: align_mode;
+      channels: int }
 ;;
 
 
 let default_options =
     { margin = 0;
-      align_mode = No_align }
+      align_mode = No_align;
+      channels = 4 }
 ;;
 
 
@@ -96,6 +104,10 @@ let rec parse_options prev_option =
         parse_options
             { prev_option with align_mode = Align_to_4 }
             other
+    | "--channels" :: channels :: other ->
+        parse_options
+            { prev_option with channels = int_of_string channels }
+            other
     | _ -> Error ()
 ;;
 
@@ -105,7 +117,7 @@ let write_bin_pack_result options out (result: _ Bin_pack.result) =
         Array1.create 
             Int8_unsigned
             c_layout 
-            (result.width * result.height * 4) in
+            (result.width * result.height * options.channels) in
 
     Array1.fill pack 0;
 
@@ -136,12 +148,12 @@ let write_bin_pack_result options out (result: _ Bin_pack.result) =
                 let dst_y = rect.y + src_y in
                 let dst_x = rect.x + src_x in
                 let dst_offset = 
-                    (dst_y * result.width + dst_x) * 4 in
+                    (dst_y * result.width + dst_x) * options.channels in
                 
                 let src_offset = 
-                    (src_y * rect.w + src_x) * 4 in
+                    (src_y * rect.w + src_x) * options.channels in
 
-                for channel = 0 to 3 do
+                for channel = 0 to options.channels - 1 do
                     Array1.get image_pixels (src_offset + channel)
                     |> Array1.set pack (dst_offset + channel)
                 done
@@ -166,7 +178,12 @@ let write_bin_pack_result options out (result: _ Bin_pack.result) =
         | ".tga" -> Stb_image_write.tga
         | _ -> failwith "Unknown output type." in
 
-    save_function out ~w:result.width ~h:result.height ~c:4 pack
+    save_function 
+        out 
+        ~w:result.width 
+        ~h:result.height 
+        ~c:options.channels 
+        pack
 ;;
 
 
@@ -182,7 +199,7 @@ let () =
                 match parse_options default_options options with
                 | Error () -> help ()
                 | Ok options ->
-                    get_image_files input_dir
+                    get_image_files options.channels input_dir
                     |> List.map (fun (name, image) ->
                         { w = width image + 2 * options.margin;
                           h = height image + 2 * options.margin;
