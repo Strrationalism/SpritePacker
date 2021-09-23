@@ -8,7 +8,11 @@ let help () =
     print_endline "by Strrationalism Studio 2021";
     print_endline "";
     print_endline "Usage:";
-    print_endline "    sppak <inputDir> <output> [--margin <margin-in-pixels>]";
+    print_endline "    sppak <inputDir> <output> [OPTIONS]";
+    print_endline "";
+    print_endline "Options:";
+    print_endline "    --align-to-4       Align packed image to 4*N pixels.";
+    print_endline "    --margin <margin>  Set margin in pixels for every sprite.";
     print_endline ""
 ;;
 
@@ -47,13 +51,21 @@ let get_image_files dir =
 ;;
 
 
+type align_mode =
+    | No_align
+    | Align_to_4
+;;
+
+
 type options = 
-    { margin: int }
+    { margin: int;
+      align_mode: align_mode }
 ;;
 
 
 let default_options =
-    { margin = 0 }
+    { margin = 0;
+      align_mode = No_align }
 ;;
 
 
@@ -62,7 +74,11 @@ let rec parse_options prev_option =
     | [] -> Ok prev_option
     | "--margin" :: margin_value :: other -> 
         parse_options 
-            { margin = int_of_string margin_value } 
+            { prev_option with margin = int_of_string margin_value } 
+            other
+    | "--align-to-4" :: other ->
+        parse_options
+            { prev_option with align_mode = Align_to_4 }
             other
     | _ -> Error ()
 ;;
