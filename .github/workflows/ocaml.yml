@@ -55,6 +55,9 @@ jobs:
       - name: Build
         run: opam exec -- dune build ./sppak.exe --release
         
+      - name: Benchmark
+        run: opam exec -- dune runtest --release
+        
       - name: Rename for Unix-like platform
         if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
         run: mv ./_build/default/sppak.exe ./_build/default/sppak

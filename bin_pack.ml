@@ -29,7 +29,7 @@ let rec except_one x =
 
 
 let sum_by by ls =
-    List.map by ls 
+    (0 :: List.map by ls)
     |> reduce_left (fun a b -> a + b) 
 ;;
 

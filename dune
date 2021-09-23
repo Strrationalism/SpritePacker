@@ -1,3 +1,14 @@
+(library
+  (name bin_pack)
+  (modules Bin_pack))
+
 (executable
   (name sppak)
-  (libraries stb_image stb_image_write))
+  (modules Sppak)
+  (libraries stb_image stb_image_write bin_pack))
+
+(test 
+  (name bench)
+  (modules Bench)
+  (libraries bin_pack))
+  
