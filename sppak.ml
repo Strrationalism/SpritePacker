@@ -1,4 +1,6 @@
 open Bin_pack;;
+(*open Bigarray;;*)
+
 
 let help () =
     print_endline "Sprite Packer";
@@ -30,7 +32,7 @@ let get_image_files dir =
             |> String.lowercase_ascii in
         ext = ".png" || ext = ".bmp")
     |> List.map (fun name ->
-        let img_result = Stb_image.load ~channels:4 (dir ^ "/" ^ name) in
+        let img_result = Stb_image.loadf ~channels:4 (dir ^ "/" ^ name) in
         match img_result with
         | Ok x -> name, x
         | Error (`Msg x) -> failwith x)
@@ -58,20 +60,36 @@ let rec parse_options prev_option =
 ;;
 
 
-let process input_dir _ options =
-    if Sys.is_directory input_dir |> not then
-        failwith "<inputDir> must be a dirctory.";
+let write_bin_pack_result options _ result =
+    (*let _ = 
+        Array1.create 
+            float32 
+            c_layout 
+            (result.width * result.height) in*)
 
-    match options with
-    | Error () -> help ()
-    | Ok options ->
-        get_image_files input_dir
-        |> List.map (fun (name, image) ->
-            { w = Stb_image.width image + 2 * options.margin;
-              h = Stb_image.height image + 2 * options.margin;
-              tag = name, image })
-        |> bin_pack
-        |> ignore
+    let csv = ref "name, x, y, w, h\n" in
+
+    let sprites =
+        result.rects
+        |> List.map (fun (rect, tag) ->
+            { x = rect.x + options.margin;
+            y = rect.y + options.margin;
+            w = rect.w - 2 * options.margin;
+            h = rect.h - 2 * options.margin; },
+            tag) in
+    
+    sprites
+    |> List.iter (fun (rect, (name, _)) ->
+        csv := 
+            Printf.sprintf "%s\"%s\", %d, %d, %d, %d\n" 
+                (!csv) 
+                (Filename.chop_extension name)
+                rect.x 
+                rect.y 
+                rect.w 
+                rect.h);
+
+    print_endline (!csv)
 ;;
 
 
@@ -79,9 +97,21 @@ let () =
     Sys.argv
     |> Array.to_list
     |> function
-        | _ :: input_dir :: out_dir :: options ->
-            let options = parse_options default_options options in
-            process input_dir out_dir options
+        | _ :: input_dir :: out :: options ->
+            if Sys.is_directory input_dir |> not then
+                failwith "<inputDir> must be a dirctory.";
+            begin
+                match parse_options default_options options with
+                | Error () -> help ()
+                | Ok options ->
+                    get_image_files input_dir
+                    |> List.map (fun (name, image) ->
+                        { w = Stb_image.width image + 2 * options.margin;
+                          h = Stb_image.height image + 2 * options.margin;
+                          tag = name, image })
+                    |> bin_pack
+                    |> write_bin_pack_result options out
+            end
             
         | _ -> help ()
 ;;
